@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "chURL": {
+      "commandName": "Project",
+      "commandLineArgs": "chURL.log",
+      "workingDirectory": "M:\\dev\\projects\\chURL"
+    }
+  }
+}

@@ -19,16 +19,8 @@ namespace chURL
 
             ILogger logger = ConfigureLogger(logFileWriter);
             // Output some text on the console
-            using (logger.BeginScope("[scope is enabled]"))
+            using (logger.BeginScope("Main"))
             {
-                logger.LogInformation("Hello World!");
-                logger.LogInformation("Logs contain timestamp and log level.");
-                logger.LogInformation("Each log message is fit in a single line.");
-
-                logger.LogInformation("Info Log");
-                logger.LogWarning("Warning Log");
-                logger.LogError("Error Log");
-                logger.LogCritical("Critical Log");
             }
 
             return 0;

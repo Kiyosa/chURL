@@ -2,7 +2,7 @@
   "profiles": {
     "chURL": {
       "commandName": "Project",
-      "commandLineArgs": "-o M:\\dev\\projects\\chURL\\chURL.log -a -l Information",
+      "commandLineArgs": "-l Trace https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
       "workingDirectory": "M:\\dev\\projects\\chURL"
     }
   }

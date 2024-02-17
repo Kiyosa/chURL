@@ -8,40 +8,47 @@ namespace chURL
 {
     internal class Program
     {
-        public class ProgramProps
-        {
-            private readonly ILogger logger;
-
-            public ProgramProps(ILogger aLogger)
-            {
-                logger = aLogger;
-            }
-
-            public ILogger Logger { get => logger;  }
-        }
-
         public class Options
         {
             private string? logFile;
             private bool logFileAppend;
             private LogLevel logLevel;
+            private string url;
 
-            [Option('o', "logFile", Default = null, Required = false, HelpText = "Log file output.")]
+            public Options()
+            {
+                url = string.Empty;
+            }            
+
+            [Option('o', "logFile", Default = "chURL.log", Required = false, HelpText = "Log file output.")]
             public string? LogFile { get => logFile; set => logFile = value; }
 
-            [Option('a', "logFileAppend", Default = true, Required = false, HelpText = "Append Log file output.")]
-            public bool LogFileAppend { get => logFileAppend; set => logFileAppend = value; }
+            [Option('a', Default = false, Required = false, HelpText = "Append Log file output.")]
+            public bool Append { get => logFileAppend; set => logFileAppend = value; }
 
-            [Option('l', "logLevel", Default = Microsoft.Extensions.Logging.LogLevel.Critical, Required = false, HelpText = "Logging level.")]
+            [Option('l', "logLevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
             public LogLevel LogLevel { get => logLevel; set => logLevel = value; }
+
+            [Value(0, MetaName = "URL", Required = true, HelpText = "API URL e.g. https://domain.example/endpoint?arg1=x&arg2=y")]
+            public string URL { get => url; set => url = value; }
         }
+
+        public class ProgramProps(Program.Options theOptions, ILogger aLogger)
+        {
+            private readonly Options options = theOptions;
+            private readonly ILogger logger = aLogger;
+
+            public ILogger Logger { get => logger; }
+            public Options Options { get => options; }
+        }
+
 
         static int Main(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(options =>
                 {
-                    if (options.LogFileAppend)
+                    if (options.Append)
                     {
                         Console.Write("Appending to ");
                     }
@@ -62,15 +69,26 @@ namespace chURL
 
         static void RunWith(ProgramProps pp)
         {
-            // Output some text on the console
-            pp.Logger.LogInformation("Hello World!");
-            pp.Logger.LogInformation("Logs contain timestamp and log level.");
-            pp.Logger.LogInformation("Each log message is fit in a single line.");
+            var api = new RestCall(pp.Logger);
+            var task = api.Call(pp.Options.URL);
+            task.Wait();
 
-            pp.Logger.LogInformation("Info Log");
-            pp.Logger.LogWarning("Warning Log");
-            pp.Logger.LogError("Error Log");
-            pp.Logger.LogCritical("Critical Log");
+            bool returned = true;
+            if (returned)
+            {
+                if (task.Result.Status != System.Net.HttpStatusCode.OK)
+                {
+                    pp.Logger.LogError($"HttpError: {task.Result.Status}");
+                }
+                else
+                {
+                    pp.Logger.LogDebug(task.Result.JSON);
+                }
+            }
+            else
+            {
+                pp.Logger.LogError("Request timed out.");
+            }
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)
@@ -108,7 +126,7 @@ namespace chURL
                 if (options.LogFile != null)
                 {
                     // Create a StreamWriter to write logs to a text file
-                    StreamWriter streamWriter = new(options.LogFile, append: options.LogFileAppend);
+                    StreamWriter streamWriter = new(options.LogFile, append: options.Append);
 
                     // Add a custom log provider to write logs to text files
                     builder.AddProvider(new CustomFileLoggerProvider(streamWriter, options.LogLevel));
@@ -116,7 +134,7 @@ namespace chURL
             });
 
             // Create an ILogger
-            return new ProgramProps(loggerFactory.CreateLogger<Program>());
+            return new ProgramProps(options, loggerFactory.CreateLogger<Program>());
         }
 
     }

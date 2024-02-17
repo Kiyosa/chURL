@@ -14,6 +14,7 @@ namespace chURL
             private bool logFileAppend;
             private LogLevel logLevel;
             private string url;
+            private int timeOutMillisec;
 
             public Options()
             {
@@ -28,6 +29,9 @@ namespace chURL
 
             [Option('l', "logLevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
             public LogLevel LogLevel { get => logLevel; set => logLevel = value; }
+
+            [Option('t', "timeOut", Default = 1000, Required = false, HelpText = "Request time out wait in milliseconds.")]
+            public int TimeOut {  get => timeOutMillisec; set => timeOutMillisec = value; }
 
             [Value(0, MetaName = "URL", Required = true, HelpText = "API URL e.g. https://domain.example/endpoint?arg1=x&arg2=y")]
             public string URL { get => url; set => url = value; }
@@ -71,9 +75,7 @@ namespace chURL
         {
             var api = new RestCall(pp.Logger);
             var task = api.Call(pp.Options.URL);
-            task.Wait();
-
-            bool returned = true;
+            bool returned = task.Wait(pp.Options.TimeOut);
             if (returned)
             {
                 if (task.Result.Status != System.Net.HttpStatusCode.OK)

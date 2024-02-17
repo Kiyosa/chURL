@@ -1,32 +1,96 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
+using CommandLine;
+using Microsoft.Extensions.Options;
+using static chURL.Program;
 using Microsoft.Extensions.Logging.Console;
 
 namespace chURL
 {
     internal class Program
     {
+        public class ProgramProps
+        {
+            private readonly ILogger logger;
+
+            public ProgramProps(ILogger aLogger)
+            {
+                logger = aLogger;
+            }
+
+            public ILogger Logger { get => logger;  }
+        }
+
+        public class Options
+        {
+            private string? logFile;
+            private bool logFileAppend;
+            private LogLevel logLevel;
+
+            [Option('f', "logFile", Default = null, Required = false, HelpText = "Log file output.")]
+            public string? LogFile { get => logFile; set => logFile = value; }
+
+            [Option('a', "logFileAppend", Default = true, Required = false, HelpText = "Append Log file output.")]
+            public bool LogFileAppend { get => logFileAppend; set => logFileAppend = value; }
+
+            [Option('l', "logLevel", Default = Microsoft.Extensions.Logging.LogLevel.Critical, Required = false, HelpText = "Logging level.")]
+            public LogLevel LogLevel { get => logLevel; set => logLevel = value; }
+        }
+
         static int Main(string[] args)
         {
-            if (args.Length == 0)
-            {
-                Console.WriteLine("Missing command line args. /? for usage.");
-                return 1;
-            }
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed<Options>(options =>
+                {
+                    Console.WriteLine($"Log file: -f {options.LogFile}");
 
-            // Create a StreamWriter to write logs to a text file
-            StreamWriter logFileWriter = new(args[0], append: false);
+                    if (options.LogFileAppend)
+                    {
+                        Console.WriteLine("Appending to log file");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Overwriting log file");
+                    }
 
-            ILogger logger = ConfigureLogger(logFileWriter);
-            // Output some text on the console
-            using (logger.BeginScope("Main"))
-            {
-            }
+                    Console.WriteLine($"Log level: -l {options.LogLevel}");
+
+                    RunWith(ConfigureLogger(options));
+
+                }).WithNotParsed(HandleParseError);
 
             return 0;
         }
 
-        static ILogger ConfigureLogger(StreamWriter logFileWriter)
+        static void RunWith(ProgramProps pp)
+        {
+            // Output some text on the console
+            pp.Logger.LogInformation("Hello World!");
+            pp.Logger.LogInformation("Logs contain timestamp and log level.");
+            pp.Logger.LogInformation("Each log message is fit in a single line.");
+
+            pp.Logger.LogInformation("Info Log");
+            pp.Logger.LogWarning("Warning Log");
+            pp.Logger.LogError("Error Log");
+            pp.Logger.LogCritical("Critical Log");
+        }
+
+        private static void HandleParseError(IEnumerable<Error> errs)
+        {
+            if (errs.IsVersion())
+            {
+                Console.WriteLine("Version Request");
+                return;
+            }
+
+            if (errs.IsHelp())
+            {
+                Console.WriteLine("Help Request");
+                return;
+            }
+            Console.WriteLine("Parser Fail");
+        }
+
+        private static ProgramProps ConfigureLogger(Options options)
         {
             // Create an ILoggerFactory
             ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
@@ -34,19 +98,25 @@ namespace chURL
                 //Add console output
                 builder.AddSimpleConsole(options =>
                 {
-                    options.IncludeScopes = true;
+                    options.IncludeScopes = false;
                     options.SingleLine = true;
-                    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+                    options.UseUtcTimestamp = true;
                 });
 
-                // Add a custom log provider to write logs to text files
-                builder.AddProvider(new CustomFileLoggerProvider(logFileWriter));
+                builder.SetMinimumLevel(options.LogLevel);
+
+                if (options.LogFile != null)
+                {
+                    // Create a StreamWriter to write logs to a text file
+                    StreamWriter streamWriter = new(options.LogFile, append: options.LogFileAppend);
+
+                    // Add a custom log provider to write logs to text files
+                    builder.AddProvider(new CustomFileLoggerProvider(streamWriter, options.LogLevel));
+                }
             });
 
             // Create an ILogger
-            ILogger<Program> logger = loggerFactory.CreateLogger<Program>();
-
-            return logger;
+            return new ProgramProps(loggerFactory.CreateLogger<Program>());
         }
 
     }

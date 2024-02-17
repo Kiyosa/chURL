@@ -2,7 +2,7 @@
   "profiles": {
     "chURL": {
       "commandName": "Project",
-      "commandLineArgs": "chURL.log",
+      "commandLineArgs": "-f M:\\dev\\projects\\chURL\\chURL.log -a -l Warning",
       "workingDirectory": "M:\\dev\\projects\\chURL"
     }
   }

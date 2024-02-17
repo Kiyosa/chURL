@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using CommandLine;
-using Microsoft.Extensions.Options;
-using static chURL.Program;
-using Microsoft.Extensions.Logging.Console;
+
 
 namespace chURL
 {
@@ -37,11 +35,13 @@ namespace chURL
             public string URL { get => url; set => url = value; }
         }
 
-        public class ProgramProps(Program.Options theOptions, ILogger aLogger)
+        public class Properties(Program.Options theOptions, ILoggerFactory theLoggerFactory)
         {
             private readonly Options options = theOptions;
-            private readonly ILogger logger = aLogger;
+            private readonly ILoggerFactory loggerFactory = theLoggerFactory;
+            private readonly ILogger logger = theLoggerFactory.CreateLogger<Program>();
 
+            public ILoggerFactory LoggerFactory { get => loggerFactory; }
             public ILogger Logger { get => logger; }
             public Options Options { get => options; }
         }
@@ -71,26 +71,16 @@ namespace chURL
             return 0;
         }
 
-        static void RunWith(ProgramProps pp)
+        static void RunWith(Properties pp)
         {
-            var api = new RestCall(pp.Logger);
+            var api = new RestCall(pp);
             var task = api.Call(pp.Options.URL);
-            bool returned = task.Wait(pp.Options.TimeOut);
-            if (returned)
+            var returned = task.Wait(pp.Options.TimeOut);
+            if (!returned)
             {
-                if (task.Result.Status != System.Net.HttpStatusCode.OK)
-                {
-                    pp.Logger.LogError($"HttpError: {task.Result.Status}");
-                }
-                else
-                {
-                    pp.Logger.LogDebug(task.Result.JSON);
-                }
+                pp.Logger.LogError("API Call Request timed out.");
             }
-            else
-            {
-                pp.Logger.LogError("Request timed out.");
-            }
+            pp.Logger.LogInformation(task.Result.JSON);
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)
@@ -110,7 +100,7 @@ namespace chURL
             Console.WriteLine("Parser Fail");
         }
 
-        private static ProgramProps ConfigureLogger(Options options)
+        private static Properties ConfigureLogger(Options options)
         {
             // Create an ILoggerFactory
             ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
@@ -136,7 +126,7 @@ namespace chURL
             });
 
             // Create an ILogger
-            return new ProgramProps(options, loggerFactory.CreateLogger<Program>());
+            return new Properties(options, loggerFactory);
         }
 
     }

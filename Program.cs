@@ -26,7 +26,7 @@ namespace chURL
             private bool logFileAppend;
             private LogLevel logLevel;
 
-            [Option('f', "logFile", Default = null, Required = false, HelpText = "Log file output.")]
+            [Option('o', "logFile", Default = null, Required = false, HelpText = "Log file output.")]
             public string? LogFile { get => logFile; set => logFile = value; }
 
             [Option('a', "logFileAppend", Default = true, Required = false, HelpText = "Append Log file output.")]
@@ -41,16 +41,15 @@ namespace chURL
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(options =>
                 {
-                    Console.WriteLine($"Log file: -f {options.LogFile}");
-
                     if (options.LogFileAppend)
                     {
-                        Console.WriteLine("Appending to log file");
+                        Console.Write("Appending to ");
                     }
                     else
                     {
-                        Console.WriteLine("Overwriting log file");
+                        Console.Write("Overwriting ");
                     }
+                    Console.WriteLine($"Log file: -f {options.LogFile}");
 
                     Console.WriteLine($"Log level: -l {options.LogLevel}");
 
@@ -87,6 +86,7 @@ namespace chURL
                 Console.WriteLine("Help Request");
                 return;
             }
+
             Console.WriteLine("Parser Fail");
         }
 

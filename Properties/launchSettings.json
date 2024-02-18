@@ -2,8 +2,12 @@
   "profiles": {
     "chURL": {
       "commandName": "Project",
-      "commandLineArgs": "-l Trace https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
-      "workingDirectory": "M:\\dev\\projects\\chURL"
+      "commandLineArgs": "--authorizationType Basic --clear --logLevel Trace https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+      "workingDirectory": "M:\\dev\\projects\\chURL",
+      "environmentVariables": {
+        "AuthUser": "Kiyosa",
+        "AuthPassword": "V10lentGovernE#posure"
+      }
     }
   }
 }

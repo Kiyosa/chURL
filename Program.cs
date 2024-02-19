@@ -100,25 +100,12 @@ namespace chURL
                     Console.WriteLine($"Log file: -f {options.LogFile}");
                     Console.WriteLine($"Log level: -l {options.LogLevel}");
 
-                    ExecuteHttpRequest(ConfigureLogger(options));
+                    var httpRequestManager = new HttpRequestManager(ConfigureLogger(options));
+                    httpRequestManager.Execute();
 
                 }).WithNotParsed(HandleParseError);
 
             return 0;
-        }
-
-        static void ExecuteHttpRequest(Properties pp)
-        {
-            var api = new RestCall(pp);
-            var task = api.Call(pp.Options.URL);
-            var returned = task.Wait(pp.Options.TimeOut);
-            if (!returned)
-            {
-                pp.Logger.LogError("API Call Request timed out.");
-            }
-
-            // Start Here: The returned result of the HTTP request.
-            pp.Logger.LogInformation(task.Result.JSON);
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)

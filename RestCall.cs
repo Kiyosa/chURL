@@ -10,16 +10,10 @@ namespace chURL
         public string JSON = json;
     }
 
-    internal class RestCall
+    internal class RestCall(Program.Properties theProgramProperties, string defaultMethod = "GET")
     {
-        private Program.Properties _programProperties;
-        private string _method;
-
-        public RestCall(Program.Properties theProgramProperties, string defaultMethod = "GET")
-        {
-            _programProperties = theProgramProperties;
-            _method = defaultMethod;
-        }
+        private Program.Properties _programProperties = theProgramProperties;
+        private string _method = defaultMethod;
 
         public string Method { get => _method; set => _method = value; }
 
@@ -31,7 +25,7 @@ namespace chURL
                 using HttpClient httpClient = new();
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "OBEDS.chURL");
 
-                Task<HttpResponseMessage> request = CreateHttpRequest(httpClient, url, content);
+                using Task<HttpResponseMessage> request = CreateHttpRequest(httpClient, url, content);
                 var returned = request.Wait(_programProperties.Options.TimeOut);
                 if (!returned)
                 {
@@ -40,6 +34,7 @@ namespace chURL
                 result.Status = request.Result.StatusCode;
                 if (result.Status != HttpStatusCode.OK)
                 {
+                    throw new Exception($"HTTP Error {result.Status}");
                 }
 
                 var response = await request.Result.Content.ReadAsStringAsync();

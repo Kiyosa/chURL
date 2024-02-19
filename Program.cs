@@ -1,41 +1,76 @@
 ﻿using Microsoft.Extensions.Logging;
 using CommandLine;
+using static chURL.Program;
 
 
 namespace chURL
 {
     internal class Program
     {
+        public enum AuthType
+        {
+            None,
+            Basic,
+            ApiKey,
+            OAuth2,
+            NTLM
+        };
+
         public class Options
         {
             private string? logFile;
             private bool logFileAppend;
             private LogLevel logLevel;
-            private string url;
             private int timeOutMillisec;
+            private AuthType authType;
+            private string authUser;
+            private string authPassword;
+            private string acceptHeader;
+            private string method;
+            private string url;
 
             public Options()
             {
+                authType = AuthType.None;
+                authUser = Environment.GetEnvironmentVariable("AuthUser") ?? string.Empty;
+                authPassword = Environment.GetEnvironmentVariable("AuthPassword") ?? string.Empty;
+                acceptHeader = string.Empty;
+                method = string.Empty;
                 url = string.Empty;
-            }            
+            }
+
+            [Option('a', "accept", Default = "application/json", Required = false, HelpText = "Accept content type header.")]
+            public string Accept { get => acceptHeader; set => acceptHeader = value; }
 
             [Option('o', "logFile", Default = "chURL.log", Required = false, HelpText = "Log file output.")]
             public string? LogFile { get => logFile; set => logFile = value; }
 
-            [Option('a', Default = false, Required = false, HelpText = "Append Log file output.")]
-            public bool Append { get => logFileAppend; set => logFileAppend = value; }
+            [Option('c', "clear", Default = false, Required = false, HelpText = "Clear log file output.")]
+            public bool ClearLogFile { get => logFileAppend; set => logFileAppend = value; }
 
             [Option('l', "logLevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
             public LogLevel LogLevel { get => logLevel; set => logLevel = value; }
 
             [Option('t', "timeOut", Default = 1000, Required = false, HelpText = "Request time out wait in milliseconds.")]
-            public int TimeOut {  get => timeOutMillisec; set => timeOutMillisec = value; }
+            public int TimeOut { get => timeOutMillisec; set => timeOutMillisec = value; }
+
+            [Option('u', "User", Required = false, HelpText = "User name for Basic Authorization.")]
+            public string AuthUser { get => authUser; set => authUser = value; }
+
+            [Option('p', "Password", Required = false, HelpText = "Password for Basic Authorization.")]
+            public string AuthPassword { get => authPassword; set => authPassword = value; }
+
+            [Option('z', "authorizationType", Default = AuthType.Basic, Required = false, HelpText = "Authorization { Basic, ApiKey, OAuth2, NTLM }.")]
+            public AuthType Authorization { get => authType; set => authType = value; }
+
+            [Option('m', "method", Default = "GET", Required = false, HelpText = "HTTP Method to use { HEAD, GET, POST, PUT, DELETE }")]
+            public string Method { get => method; set => method = value; }
 
             [Value(0, MetaName = "URL", Required = true, HelpText = "API URL e.g. https://domain.example/endpoint?arg1=x&arg2=y")]
             public string URL { get => url; set => url = value; }
         }
 
-        public class Properties(Program.Options theOptions, ILoggerFactory theLoggerFactory)
+        public class Properties(Options theOptions, ILoggerFactory theLoggerFactory)
         {
             private readonly Options options = theOptions;
             private readonly ILoggerFactory loggerFactory = theLoggerFactory;
@@ -52,16 +87,12 @@ namespace chURL
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(options =>
                 {
-                    if (options.Append)
+                    if (options.ClearLogFile && options.LogFile != null)
                     {
-                        Console.Write("Appending to ");
-                    }
-                    else
-                    {
-                        Console.Write("Overwriting ");
+                        File.Delete(options.LogFile);
+                        Console.Write("Cleared ");
                     }
                     Console.WriteLine($"Log file: -f {options.LogFile}");
-
                     Console.WriteLine($"Log level: -l {options.LogLevel}");
 
                     RunWith(ConfigureLogger(options));
@@ -118,7 +149,7 @@ namespace chURL
                 if (options.LogFile != null)
                 {
                     // Create a StreamWriter to write logs to a text file
-                    StreamWriter streamWriter = new(options.LogFile, append: options.Append);
+                    StreamWriter streamWriter = new(options.LogFile, append: true);
 
                     // Add a custom log provider to write logs to text files
                     builder.AddProvider(new CustomFileLoggerProvider(streamWriter, options.LogLevel));

@@ -84,6 +84,11 @@ namespace chURL
 
         static int Main(string[] args)
         {
+            return ParseArgsAndRun(args);
+        }
+
+        private static int ParseArgsAndRun(string[] args)
+        {
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(options =>
                 {
@@ -95,14 +100,14 @@ namespace chURL
                     Console.WriteLine($"Log file: -f {options.LogFile}");
                     Console.WriteLine($"Log level: -l {options.LogLevel}");
 
-                    RunWith(ConfigureLogger(options));
+                    ExecuteHttpRequest(ConfigureLogger(options));
 
                 }).WithNotParsed(HandleParseError);
 
             return 0;
         }
 
-        static void RunWith(Properties pp)
+        static void ExecuteHttpRequest(Properties pp)
         {
             var api = new RestCall(pp);
             var task = api.Call(pp.Options.URL);
@@ -111,6 +116,8 @@ namespace chURL
             {
                 pp.Logger.LogError("API Call Request timed out.");
             }
+
+            // Start Here: The returned result of the HTTP request.
             pp.Logger.LogInformation(task.Result.JSON);
         }
 

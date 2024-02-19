@@ -149,10 +149,10 @@ namespace chURL
                 if (options.LogFile != null)
                 {
                     // Create a StreamWriter to write logs to a text file
-                    StreamWriter streamWriter = new(options.LogFile, append: true);
-
                     // Add a custom log provider to write logs to text files
-                    builder.AddProvider(new CustomFileLoggerProvider(streamWriter, options.LogLevel));
+                    builder.AddProvider(
+                        new CustomFileLoggerProvider(
+                            new(options.LogFile, append: true), options.LogLevel));
                 }
             });
 

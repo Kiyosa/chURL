@@ -9,16 +9,10 @@ using static chURL.Program;
 
 namespace chURL
 {
-    internal class HttpRequestManager
+    internal class HttpRequestManager(Program.Properties programProperties)
     {
-        private Program.Properties ProgramProperties;
-        private ILogger logger;
-
-        public HttpRequestManager(Program.Properties programProperties)
-        {
-            ProgramProperties = programProperties;
-            logger = ProgramProperties.Logger;
-        }
+        readonly private Program.Properties ProgramProperties = programProperties;
+        readonly private ILogger logger = programProperties.Logger;
 
         public void Execute()
         {

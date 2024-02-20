@@ -57,10 +57,10 @@ namespace chURL
             [Option('k', "apikey", Default = LogLevel.Error, Required = false, HelpText = "API Key.")]
             public string ApiKey { get => apiKey; set => apiKey = value; }
 
-            [Option('l', "logLevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
+            [Option('l', "loglevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
             public LogLevel LogLevel { get => logLevel; set => logLevel = value; }
 
-            [Option('t', "timeOut", Default = 1000, Required = false, HelpText = "Request time out wait in milliseconds.")]
+            [Option('t', "timeout", Default = 1000, Required = false, HelpText = "Request time out wait in milliseconds.")]
             public int TimeOut { get => timeOutMillisec; set => timeOutMillisec = value; }
 
             [Option('u', "User", Required = false, HelpText = "User name for Basic Authorization.")]
@@ -69,7 +69,7 @@ namespace chURL
             [Option('p', "Password", Required = false, HelpText = "Password for Basic Authorization.")]
             public string AuthPassword { get => authPassword; set => authPassword = value; }
 
-            [Option('z', "authorizationType", Default = AuthType.Basic, Required = false, HelpText = "Authorization { Basic, ApiKey, OAuth2, NTLM }.")]
+            [Option('z', "authorizationtype", Default = AuthType.Basic, Required = false, HelpText = "Authorization { Basic, ApiKey, OAuth2, NTLM }.")]
             public AuthType Authorization { get => authType; set => authType = value; }
 
             [Option('m', "method", Default = "GET", Required = false, HelpText = "HTTP Method to use { HEAD, GET, POST, PUT, DELETE }")]
@@ -101,16 +101,27 @@ namespace chURL
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(options =>
                 {
+                    Console.Write($"--test ");
                     if (options.ClearLogFile && options.LogFile != null)
                     {
                         File.Delete(options.LogFile);
-                        Console.Write("Cleared ");
+                        Console.Write("--clear ");
                     }
-                    Console.WriteLine($"Log file: -f {options.LogFile}");
-                    Console.WriteLine($"Log level: -l {options.LogLevel}");
+                    Console.Write($"--authorizationtype {options.Authorization} ");
+                    Console.Write($"--logfile {options.LogFile} ");
+                    Console.WriteLine($"--loglevel {options.LogLevel} ");
 
-                    var httpRequestManager = new HttpRequestManager(ConfigureLogger(options));
-                    httpRequestManager.Execute();
+                    var properties = ConfigureLogger(options);
+                    if (options.Test)
+                    {
+                        var test = new JsonRoundTripTest(properties);
+                        test.Test();
+                    }
+                    else
+                    {
+                        var httpRequestManager = new HttpRequestManager(properties);
+                        httpRequestManager.Execute();
+                    }
 
                 }).WithNotParsed(HandleParseError);
 

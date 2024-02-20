@@ -7,6 +7,54 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+/*
+https://rprecretdev.azurewebsites.net/swagger/index.html
+
+https://rprecretdev.azurewebsites.net/api/items
+GET
+​/api​/Items
+Gets a collection of new items.
+Parameters
+Try it out
+Name	Description
+api-key *
+string
+(header)	
+api-key
+Responses
+Code	Description	Links
+200	
+Success
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+[
+  {
+    "id": "string",
+    "createdDate": "2024-02-20T07:55:31.977Z",
+    "properties": {
+      "additionalProp1": "string",
+      "additionalProp2": "string",
+      "additionalProp3": "string"
+    },
+    "title": "string"
+  }
+]
+No links
+429	
+If the request was throttled. A suggested wait time (in seconds) is returned in the "Retry-After" response header.
+
+No links
+503	
+For any requests made when a client is currently being throttled. If you have received this response code then you haven't respected the "Retry-After" response header provided.
+
+ */
+
+
 namespace chURL
 {
     internal class JsonRoundTripTest(Program.Properties programProperties)

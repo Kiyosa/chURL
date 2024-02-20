@@ -12,10 +12,10 @@ namespace chURL
 
     internal class RestCall(Program.Properties theProgramProperties, string defaultMethod = "GET")
     {
-        private Program.Properties _programProperties = theProgramProperties;
-        private string _method = defaultMethod;
+        readonly private Program.Properties _programProperties = theProgramProperties;
+        readonly private string _method = defaultMethod;
 
-        public string Method { get => _method; set => _method = value; }
+        public string Method { get => _method; }
 
         public async Task<HttpResult> Call(string url, HttpContent? content = null)
         {
@@ -65,6 +65,7 @@ namespace chURL
                     break;
 
                 case Program.AuthType.ApiKey:
+                    httpClient.DefaultRequestHeaders.Add("api-key", _programProperties.Options.ApiKey);
                     break;
 
                 case Program.AuthType.OAuth2:

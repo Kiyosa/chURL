@@ -18,6 +18,7 @@ namespace chURL
 
         public class Options
         {
+            private bool test;
             private string? logFile;
             private bool logFileAppend;
             private LogLevel logLevel;
@@ -25,6 +26,7 @@ namespace chURL
             private AuthType authType;
             private string authUser;
             private string authPassword;
+            private string apiKey;
             private string acceptHeader;
             private string method;
             private string url;
@@ -34,10 +36,14 @@ namespace chURL
                 authType = AuthType.None;
                 authUser = Environment.GetEnvironmentVariable("AuthUser") ?? string.Empty;
                 authPassword = Environment.GetEnvironmentVariable("AuthPassword") ?? string.Empty;
+                apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? string.Empty;
                 acceptHeader = string.Empty;
                 method = string.Empty;
                 url = string.Empty;
             }
+
+            [Option('e', "test", Default = false, Required = false, HelpText = "Execute tests")]
+            public bool Test { get => test; set => test = value; }
 
             [Option('a', "accept", Default = "application/json", Required = false, HelpText = "Accept content type header.")]
             public string Accept { get => acceptHeader; set => acceptHeader = value; }
@@ -48,10 +54,13 @@ namespace chURL
             [Option('c', "clear", Default = false, Required = false, HelpText = "Clear log file output.")]
             public bool ClearLogFile { get => logFileAppend; set => logFileAppend = value; }
 
-            [Option('l', "logLevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
+            [Option('k', "apikey", Default = LogLevel.Error, Required = false, HelpText = "API Key.")]
+            public string ApiKey { get => apiKey; set => apiKey = value; }
+
+            [Option('l', "loglevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
             public LogLevel LogLevel { get => logLevel; set => logLevel = value; }
 
-            [Option('t', "timeOut", Default = 1000, Required = false, HelpText = "Request time out wait in milliseconds.")]
+            [Option('t', "timeout", Default = 1000, Required = false, HelpText = "Request time out wait in milliseconds.")]
             public int TimeOut { get => timeOutMillisec; set => timeOutMillisec = value; }
 
             [Option('u', "User", Required = false, HelpText = "User name for Basic Authorization.")]
@@ -60,7 +69,7 @@ namespace chURL
             [Option('p', "Password", Required = false, HelpText = "Password for Basic Authorization.")]
             public string AuthPassword { get => authPassword; set => authPassword = value; }
 
-            [Option('z', "authorizationType", Default = AuthType.Basic, Required = false, HelpText = "Authorization { Basic, ApiKey, OAuth2, NTLM }.")]
+            [Option('z', "authorizationtype", Default = AuthType.Basic, Required = false, HelpText = "Authorization { Basic, ApiKey, OAuth2, NTLM }.")]
             public AuthType Authorization { get => authType; set => authType = value; }
 
             [Option('m', "method", Default = "GET", Required = false, HelpText = "HTTP Method to use { HEAD, GET, POST, PUT, DELETE }")]
@@ -84,34 +93,39 @@ namespace chURL
 
         static int Main(string[] args)
         {
+            return ParseArgsAndRun(args);
+        }
+
+        private static int ParseArgsAndRun(string[] args)
+        {
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed<Options>(options =>
                 {
+                    Console.Write($"--test ");
                     if (options.ClearLogFile && options.LogFile != null)
                     {
                         File.Delete(options.LogFile);
-                        Console.Write("Cleared ");
+                        Console.Write("--clear ");
                     }
-                    Console.WriteLine($"Log file: -f {options.LogFile}");
-                    Console.WriteLine($"Log level: -l {options.LogLevel}");
+                    Console.Write($"--authorizationtype {options.Authorization} ");
+                    Console.Write($"--logfile {options.LogFile} ");
+                    Console.WriteLine($"--loglevel {options.LogLevel} ");
 
-                    RunWith(ConfigureLogger(options));
+                    var properties = ConfigureLogger(options);
+                    if (options.Test)
+                    {
+                        var test = new JsonRoundTripTest(properties);
+                        test.Test();
+                    }
+                    else
+                    {
+                        var httpRequestManager = new HttpRequestManager(properties);
+                        httpRequestManager.Execute();
+                    }
 
                 }).WithNotParsed(HandleParseError);
 
             return 0;
-        }
-
-        static void RunWith(Properties pp)
-        {
-            var api = new RestCall(pp);
-            var task = api.Call(pp.Options.URL);
-            var returned = task.Wait(pp.Options.TimeOut);
-            if (!returned)
-            {
-                pp.Logger.LogError("API Call Request timed out.");
-            }
-            pp.Logger.LogInformation(task.Result.JSON);
         }
 
         private static void HandleParseError(IEnumerable<Error> errs)

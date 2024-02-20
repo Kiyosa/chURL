@@ -27,12 +27,11 @@ namespace chURL
             var returned = task.Wait(ProgramProperties.Options.TimeOut);
             if (!returned)
             {
-                ProgramProperties.Logger.LogError("API Call Request timed out.");
+                logger.LogError("API Call Request timed out.");
             }
 
             // Start Here: The returned result of the HTTP request.
-            ProgramProperties.Logger.LogInformation(task.Result.JSON);
+            logger.LogInformation(task.Result.JSON);
         }
-
     }
 }

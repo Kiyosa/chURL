@@ -18,6 +18,7 @@ namespace chURL
 
         public class Options
         {
+            private bool test;
             private string? logFile;
             private bool logFileAppend;
             private LogLevel logLevel;
@@ -25,6 +26,7 @@ namespace chURL
             private AuthType authType;
             private string authUser;
             private string authPassword;
+            private string apiKey;
             private string acceptHeader;
             private string method;
             private string url;
@@ -34,10 +36,14 @@ namespace chURL
                 authType = AuthType.None;
                 authUser = Environment.GetEnvironmentVariable("AuthUser") ?? string.Empty;
                 authPassword = Environment.GetEnvironmentVariable("AuthPassword") ?? string.Empty;
+                apiKey = Environment.GetEnvironmentVariable("ApiKey") ?? string.Empty;
                 acceptHeader = string.Empty;
                 method = string.Empty;
                 url = string.Empty;
             }
+
+            [Option('e', "test", Default = false, Required = false, HelpText = "Execute tests")]
+            public bool Test { get => test; set => test = value; }
 
             [Option('a', "accept", Default = "application/json", Required = false, HelpText = "Accept content type header.")]
             public string Accept { get => acceptHeader; set => acceptHeader = value; }
@@ -47,6 +53,9 @@ namespace chURL
 
             [Option('c', "clear", Default = false, Required = false, HelpText = "Clear log file output.")]
             public bool ClearLogFile { get => logFileAppend; set => logFileAppend = value; }
+
+            [Option('k', "apikey", Default = LogLevel.Error, Required = false, HelpText = "API Key.")]
+            public string ApiKey { get => apiKey; set => apiKey = value; }
 
             [Option('l', "logLevel", Default = LogLevel.Error, Required = false, HelpText = "Logging level.")]
             public LogLevel LogLevel { get => logLevel; set => logLevel = value; }

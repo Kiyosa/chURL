@@ -2,12 +2,8 @@
   "profiles": {
     "chURL": {
       "commandName": "Project",
-      "commandLineArgs": "--test --authorizationType ApiKey --apikey david --clear --logLevel Trace https://rprecretdev.azurewebsites.net/api/items",
+      "commandLineArgs": "--test --authorizationtype ApiKey --apikey david --clear --loglevel Trace https://rprecretdev.azurewebsites.net/api/items",
       "workingDirectory": "M:\\dev\\projects\\chURL",
-      "environmentVariables": {
-        "AuthUser": "Kiyosa",
-        "AuthPassword": "V10lentGovernE#posure"
-      }
     }
   }
 }

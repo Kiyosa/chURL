@@ -9,8 +9,11 @@ using System.Threading.Tasks;
 
 namespace chURL
 {
-    internal class JsonRoundTripTest
+    internal class JsonRoundTripTest(Program.Properties programProperties)
     {
+        private readonly Program.Properties ProgramProperties = programProperties;
+        private readonly ILogger logger = programProperties.Logger;
+
         public void Test()
         {
             string json = """
@@ -18,7 +21,10 @@ namespace chURL
 """;
             var itemList = SplitJsonArray(json);
             var rtjson = ListOfItemsToString(itemList!);
+            logger.LogTrace(json);
+            logger.LogTrace(rtjson);
             Debug.Assert(json == rtjson);
+            logger.LogDebug(nameof(JsonRoundTripTest) + nameof(Test) + " passed.");
         }
 
         private List<Item>? SplitJsonArray(string json)
@@ -38,21 +44,18 @@ namespace chURL
 
         private string ListOfItemsToString(List<Item> itemList)
         {
-            string s = string.Empty;
-            if (itemList?.Count > 0)
+            string s = "[]";
+            if (itemList?.Count == 0)
             {
-                s += "[ ";
-                string l = string.Empty;
-                foreach (var item in itemList)
-                {
-                    l += item.ToString() + ", ";
-                }
-                s += l.Remove(l.Length - 1) + " ]";
+                return s;
             }
-            else
+            s = "[ ";
+            string l = string.Empty;
+            foreach (var item in itemList!)
             {
-                s = "[]";
+                l += item.ToString() + ", ";
             }
+            s += l.Remove(l.Length - 2) + " ]";
             return s;
         }
     }

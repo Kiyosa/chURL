@@ -65,6 +65,7 @@ namespace chURL
                     break;
 
                 case Program.AuthType.ApiKey:
+                    httpClient.DefaultRequestHeaders.Add("api-key", _programProperties.Options.ApiKey);
                     break;
 
                 case Program.AuthType.OAuth2:

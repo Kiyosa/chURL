@@ -2,12 +2,8 @@
   "profiles": {
     "chURL": {
       "commandName": "Project",
-      "commandLineArgs": "--authorizationType Basic --clear --logLevel Trace https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+      "commandLineArgs": "--test --authorizationtype ApiKey --apikey david --clear --loglevel Trace https://rprecretdev.azurewebsites.net/api/items",
       "workingDirectory": "M:\\dev\\projects\\chURL",
-      "environmentVariables": {
-        "AuthUser": "Kiyosa",
-        "AuthPassword": "V10lentGovernE#posure"
-      }
     }
   }
 }
